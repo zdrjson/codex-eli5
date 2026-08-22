@@ -1,0 +1,20 @@
+{
+  "name": "codex-eli5",
+  "interface": {
+    "displayName": "ELI5 for Codex"
+  },
+  "plugins": [
+    {
+      "name": "codex-eli5",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex-eli5"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+ELI5 for Codex
+Copyright 2026 Jason
+
+This project is inspired by the ELI5 plugin in Anthropic's
+claude-plugins-community repository:
+https://github.com/anthropics/claude-plugins-community/tree/main/eli5
+
+That upstream repository is licensed under the Apache License 2.0.
+This independent adaptation changes the package format and expands the
+workflow, accessibility requirements, artifact checks, and documentation
+for OpenAI Codex.

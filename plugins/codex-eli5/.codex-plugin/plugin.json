@@ -1,0 +1,37 @@
+{
+  "name": "codex-eli5",
+  "version": "0.1.0",
+  "description": "Turn complex topics into visual, beginner-friendly, single-file HTML explainers.",
+  "author": {
+    "name": "Jason",
+    "url": "https://github.com/zdrjson"
+  },
+  "homepage": "https://github.com/zdrjson/codex-eli5#readme",
+  "repository": "https://github.com/zdrjson/codex-eli5",
+  "license": "Apache-2.0",
+  "keywords": [
+    "eli5",
+    "visual-explainer",
+    "education",
+    "html",
+    "learning"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ELI5 for Codex",
+    "shortDescription": "Turn hard topics into visual HTML explainers.",
+    "longDescription": "Creates a self-contained, beginner-friendly HTML explainer with large visuals, plain language, and progressive steps.",
+    "developerName": "Jason",
+    "category": "Productivity",
+    "capabilities": [
+      "Create",
+      "Visualize"
+    ],
+    "brandColor": "#FF6B35",
+    "defaultPrompt": [
+      "Explain how DNS works with a visual ELI5 page.",
+      "Turn this idea into a picture-first explainer.",
+      "Teach me this topic from zero with an HTML artifact."
+    ]
+  }
+}
