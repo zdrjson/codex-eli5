@@ -1,6 +1,6 @@
 {
   "name": "codex-eli5",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Turn complex topics into visual, beginner-friendly, single-file HTML explainers.",
   "author": {
     "name": "Jason",
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "ELI5 for Codex",
     "shortDescription": "Turn hard topics into visual HTML explainers.",
-    "longDescription": "Creates a self-contained, beginner-friendly HTML explainer with large visuals, plain language, and progressive steps.",
+    "longDescription": "Creates a self-contained, beginner-friendly HTML explainer with large visuals, plain language, progressive steps, and faithful visual-reference matching.",
     "developerName": "Jason",
     "category": "Productivity",
     "capabilities": [
@@ -31,7 +31,7 @@
     "defaultPrompt": [
       "Explain how DNS works with a visual ELI5 page.",
       "Turn this idea into a picture-first explainer.",
-      "Teach me this topic from zero with an HTML artifact."
+      "Match this visual reference as an ELI5 HTML page."
     ]
   }
 }

@@ -552,6 +552,12 @@ class CheckHtmlTests(unittest.TestCase):
         self.assertTrue(example.is_file())
         self.assertEqual([], CHECK_HTML.check(example))
 
+    def test_reference_fidelity_example_uses_exact_minimum_budget(self) -> None:
+        example = ROOT / "example" / "eli5-discord-bot.html"
+        self.assertTrue(example.is_file())
+        self.assertEqual([], CHECK_HTML.check(example, max_words=202))
+        self.assertTrue(CHECK_HTML.check(example, max_words=201))
+
 
 if __name__ == "__main__":
     unittest.main()

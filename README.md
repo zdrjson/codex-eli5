@@ -6,15 +6,20 @@ A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a di
 
 Ask Codex for an ELI5 explanation and the plugin creates a finished `.html` file you can open or share immediately. The artifact uses inline CSS, JavaScript, and SVG, so it needs no build step and does not depend on a hosted service.
 
+When you provide a screenshot or video, reference-fidelity mode preserves its visible copy, structure, spacing, palette, typography, diagram language, and scroll rhythm instead of redesigning it.
+
 Examples:
 
 ```text
 $codex-eli5:eli5 How does the Discord bot work?
 Explain compound interest as a visual ELI5 page.
 Turn this architecture diagram into a beginner-friendly walkthrough.
+Match this explainer video as closely as possible in a self-contained page.
 ```
 
 ## What it makes
+
+[`example/eli5-discord-bot.html`](example/eli5-discord-bot.html) — the reference-fidelity test for Thariq Shihipar's Discord bot demo video. At the video's 1056×799 viewport, the standalone page reproduces the same 1,959px scroll canvas, copy, three diagrams, layout, and palette; remaining pixel differences come from video compression, font rasterisation, and the recorded mouse pointer. Its exact labels require the documented `--max-words 202` override.
 
 [`example/eli5-how-does-dns-work.html`](example/eli5-how-does-dns-work.html) — produced by following this skill, then verified with the bundled checker.
 
@@ -67,6 +72,8 @@ The checker supports Python 3.9+ and has no third-party dependencies. Use `py -3
 
 One thing the checker *can't* catch: SVG text that overflows its `viewBox` gets silently clipped, and static analysis won't see it. That one needs eyes on the rendered page — which is why the skill asks for a browser pass.
 
+Reference matching can legitimately need more than the default 120 words because diagram labels are part of the picture. In that case the skill keeps the exact labels and uses the smallest explicit `--max-words` override, capped at 220 unless the user asks for a longer page.
+
 ## Development
 
 Run the dependency-free tests:
@@ -88,6 +95,14 @@ The Claude original is three lines long, and it can afford to be: Claude renders
 **`$ARGUMENTS` → read the turn.** Codex skills take no arguments; the skill reads the topic from the user's message and asks if it arrives bare.
 
 **The design brief is spelled out, and machine-checked.** This is the part that matters most. Claude reaches for a visual layout on its own; Codex is tuned as a coding agent and will hand you a tidy, text-heavy document unless told otherwise. So the constraints are explicit — ~12 words per step and 120 per page, cover-the-text-and-it-still-reads, one analogy held to the end, the moving thing keeping one colour and one shape throughout — and the two that can be checked statically are wired into `check_html.py`, because a rule nothing enforces is a suggestion.
+
+**Visual references are specifications, not mood boards.** Version 0.2.1 adds a fidelity path for screenshots and videos: inspect complete frames first, retain literal actors when they explain the system better than an analogy, and avoid adding landing-page flourishes or interactions that are absent from the source.
+
+## Claude ELI5, Codex ELI5, and Visualize
+
+- Anthropic's Claude ELI5 is a tiny prompt skill that relies on Claude's artifact surface.
+- Codex ELI5 writes a portable standalone HTML file, validates it, and can be installed from GitHub.
+- Codex's `visualize` skill renders an exploration inside the current conversation; it is ideal for an immediate chart, simulator, or comparison, but it is not a replacement for a standalone reference-matched page.
 
 ## Credits
 
