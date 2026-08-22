@@ -52,6 +52,57 @@ class CheckHtmlTests(unittest.TestCase):
         )
         self.assertEqual([], CHECK_HTML.check(path))
 
+    # --- picture-first checks -------------------------------------------------
+
+    HEAD = (
+        '<!doctype html><html lang="en"><head><meta name="viewport" '
+        'content="width=device-width"><title>T</title><style>body{color:#111}</style>'
+        "</head><body>"
+    )
+
+    def test_flags_page_over_the_word_budget(self) -> None:
+        path = self.write_html(self.HEAD + "<p>" + "word " * 130 + "</p></body></html>")
+        errors = CHECK_HTML.check(path)
+        self.assertTrue(any("budget is 120" in e for e in errors), errors)
+
+    def test_word_budget_ignores_script_and_style_text(self) -> None:
+        noise = "var x = '" + "filler " * 200 + "';"
+        path = self.write_html(
+            self.HEAD + f"<script>{noise}</script><style>{noise}</style>"
+            "<p>Nine short words carry this whole explainer page.</p></body></html>"
+        )
+        self.assertEqual([], CHECK_HTML.check(path))
+
+    def test_word_budget_is_configurable_and_can_be_disabled(self) -> None:
+        path = self.write_html(self.HEAD + "<p>" + "word " * 130 + "</p></body></html>")
+        self.assertEqual([], CHECK_HTML.check(path, max_words=0))
+        self.assertEqual([], CHECK_HTML.check(path, max_words=500))
+
+    def test_flags_inline_svg_without_an_accessible_name(self) -> None:
+        path = self.write_html(self.HEAD + "<svg><rect/></svg></body></html>")
+        errors = CHECK_HTML.check(path)
+        self.assertTrue(any("no accessible name" in e for e in errors), errors)
+
+    def test_accepts_svg_named_by_title_child_or_hidden(self) -> None:
+        path = self.write_html(
+            self.HEAD + "<svg><title>A pipe</title><rect/></svg>"
+            '<svg aria-hidden="true"><rect/></svg>'
+            '<svg aria-labelledby="cap"><rect/></svg></body></html>'
+        )
+        self.assertEqual([], CHECK_HTML.check(path))
+
+    def test_nested_svg_counts_once(self) -> None:
+        path = self.write_html(
+            self.HEAD + '<svg aria-label="outer"><svg><rect/></svg></svg></body></html>'
+        )
+        self.assertEqual([], CHECK_HTML.check(path))
+
+    def test_real_example_artifact_passes(self) -> None:
+        example = Path(__file__).parents[1] / "example" / "eli5-how-does-dns-work.html"
+        if not example.exists():
+            self.skipTest("example artifact not present")
+        self.assertEqual([], CHECK_HTML.check(example))
+
 
 if __name__ == "__main__":
     unittest.main()

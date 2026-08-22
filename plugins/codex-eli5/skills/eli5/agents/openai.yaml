@@ -1,0 +1,8 @@
+interface:
+  display_name: "ELI5"
+  short_description: "Turn hard topics into visual HTML explainers."
+  brand_color: "#FF6B35"
+  default_prompt: "Explain the user's topic as a self-contained HTML page built from big pictures and almost no words."
+
+policy:
+  allow_implicit_invocation: true

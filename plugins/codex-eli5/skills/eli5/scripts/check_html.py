@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Run lightweight, dependency-free checks on an ELI5 HTML artifact."""
+"""Run lightweight, dependency-free checks on an ELI5 HTML artifact.
+
+Two families of check:
+  self-contained  — doctype, lang, title, viewport, inline style, no network assets
+  picture-first   — visible word budget, and an accessible name on every non-decorative
+                    inline SVG (the checks that keep an explainer from silently
+                    degrading into a tidy wall of text)
+"""
 
 from __future__ import annotations
 
@@ -21,6 +28,13 @@ class ArtifactParser(HTMLParser):
         self.has_style = False
         self.external_resources: list[str] = []
         self.images_without_alt = 0
+        self.svgs = 0
+        self.svgs_without_name = 0
+        self._svg_depth = 0
+        self._svg_has_title = False
+        self._svg_named = False
+        self._skip_text_depth = 0
+        self.visible_text: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
@@ -35,6 +49,20 @@ class ArtifactParser(HTMLParser):
         elif tag == "img" and not (values.get("alt") or "").strip():
             self.images_without_alt += 1
 
+        if tag in {"script", "style"}:
+            self._skip_text_depth += 1
+        if tag == "svg":
+            if self._svg_depth == 0:
+                self.svgs += 1
+                self._svg_has_title = False
+                self._svg_named = bool(
+                    (values.get("aria-label") or "").strip()
+                    or (values.get("aria-labelledby") or "").strip()
+                ) or (values.get("aria-hidden") or "").strip() == "true"
+            self._svg_depth += 1
+        elif tag == "title" and self._svg_depth > 0:
+            self._svg_has_title = True
+
         resource_attributes = ["src", "poster", "srcset"]
         if tag == "link":
             resource_attributes.append("href")
@@ -46,13 +74,27 @@ class ArtifactParser(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if tag == "title":
             self.in_title = False
+        if tag in {"script", "style"} and self._skip_text_depth > 0:
+            self._skip_text_depth -= 1
+        if tag == "svg" and self._svg_depth > 0:
+            self._svg_depth -= 1
+            if self._svg_depth == 0 and not (self._svg_named or self._svg_has_title):
+                self.svgs_without_name += 1
 
     def handle_data(self, data: str) -> None:
         if self.in_title:
             self.title_parts.append(data)
+        elif self._skip_text_depth == 0:
+            self.visible_text.append(data)
+
+    def word_count(self) -> int:
+        return len("".join(self.visible_text).split())
 
 
-def check(path: Path) -> list[str]:
+DEFAULT_MAX_WORDS = 120
+
+
+def check(path: Path, max_words: int = DEFAULT_MAX_WORDS) -> list[str]:
     errors: list[str] = []
     if path.suffix.lower() not in {".html", ".htm"}:
         errors.append("file extension must be .html or .htm")
@@ -85,14 +127,32 @@ def check(path: Path) -> list[str]:
         errors.append("external CSS asset found")
     if parser.images_without_alt:
         errors.append(f"{parser.images_without_alt} image(s) missing alt text")
+    if parser.svgs_without_name:
+        errors.append(
+            f"{parser.svgs_without_name} inline svg(s) have no accessible name "
+            "(add aria-label, aria-labelledby, a <title> child, or aria-hidden=\"true\")"
+        )
+    if max_words > 0:
+        words = parser.word_count()
+        if words > max_words:
+            errors.append(
+                f"{words} visible words, budget is {max_words} — "
+                "if the words will not fit, the picture has not been found yet"
+            )
     return errors
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("html_file", type=Path)
+    parser.add_argument(
+        "--max-words",
+        type=int,
+        default=DEFAULT_MAX_WORDS,
+        help=f"visible word budget for the page (default {DEFAULT_MAX_WORDS}; 0 disables)",
+    )
     args = parser.parse_args()
-    errors = check(args.html_file)
+    errors = check(args.html_file, max_words=args.max_words)
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
