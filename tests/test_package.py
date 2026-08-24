@@ -73,6 +73,7 @@ class PackageTests(unittest.TestCase):
         self.assertNotIn("\n", interface["shortDescription"])
         self.assertLessEqual(len(interface["longDescription"]), 4000)
         self.assertLessEqual(len(interface["developerName"]), 80)
+        self.assertEqual(manifest["author"]["name"], interface["developerName"])
         self.assertLessEqual(len(interface["capabilities"]), 20)
         self.assertTrue(
             all(0 < len(capability) <= 120 for capability in interface["capabilities"])
@@ -165,9 +166,11 @@ class PackageTests(unittest.TestCase):
         self.assertIn("https://github.com/zdrjson/codex-eli5/", reference_case["fixtureData"])
 
     def test_public_policy_and_support_pages_exist(self) -> None:
+        listing = json.loads(SUBMISSION_LISTING.read_text(encoding="utf-8"))
         for name in ("PRIVACY.md", "TERMS.md", "SUPPORT.md"):
             source = (ROOT / name).read_text(encoding="utf-8")
             self.assertGreater(len(source.strip()), 200)
+            self.assertIn(listing["developerName"], source)
 
     def test_skill_ui_metadata_mentions_the_skill(self) -> None:
         metadata = (

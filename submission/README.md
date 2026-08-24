@@ -20,7 +20,7 @@ Create the final ZIP from the release tag so the archive contains only tracked f
 
 ```bash
 mkdir -p dist
-git archive --format=zip v0.2.4:plugins codex-eli5 > dist/codex-eli5-0.2.4.zip
+git archive --format=zip v0.2.5:plugins codex-eli5 > dist/codex-eli5-0.2.5.zip
 ```
 
 The resulting archive must start with `codex-eli5/.codex-plugin/plugin.json` and must not include the repository marketplace, tests, examples, or submission notes.
@@ -29,6 +29,6 @@ The resulting archive must start with `codex-eli5/.codex-plugin/plugin.json` and
 
 - Run the repository unit tests and the official plugin validator.
 - Confirm all four public URLs return HTTPS success responses.
-- Upload `dist/codex-eli5-0.2.4.zip` in the Skills tab.
+- Upload `dist/codex-eli5-0.2.5.zip` in the Skills tab.
 - Wait for the skill security scan to pass.
 - Review the draft and policy attestations before selecting **Submit for Review**.

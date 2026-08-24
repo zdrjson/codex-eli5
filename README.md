@@ -2,7 +2,7 @@
 
 A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a difficult topic into a self-contained HTML explainer with big visuals, few words, and a clear step-by-step story.
 
-Version 0.2.4 makes the package ready for public-directory review: final-limit listing metadata, public support and policy links in the installable manifest, and a reproducible reviewer test pack.
+Version 0.2.5 makes the package ready for public-directory review: verified publisher identity, final-limit listing metadata, public support and policy links in the installable manifest, and a reproducible reviewer test pack.
 
 ## Demo
 
@@ -67,6 +67,7 @@ Then start a new task and invoke the skill as `$codex-eli5:eli5 <topic>`.
 
 ## Public listing information
 
+- Publisher: 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson))
 - Website: [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5)
 - Support: [GitHub Issues](https://github.com/zdrjson/codex-eli5/issues)
 - Privacy: [PRIVACY.md](PRIVACY.md)
