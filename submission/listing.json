@@ -1,9 +1,9 @@
 {
   "submissionType": "skills_only",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "displayName": "ELI5 for Codex",
   "shortDescription": "Picture-first HTML explainers.",
-  "longDescription": "Creates a self-contained, beginner-friendly HTML explainer with large visuals, plain language, progressive steps, and faithful visual-reference matching.",
+  "longDescription": "Turn a difficult topic into a beginner-friendly, picture-first HTML explainer saved as one portable file. ELI5 for Codex uses large diagrams, plain language, and progressive steps so readers can follow the mechanism without a wall of text. For a normal topic, it creates an ordered visual walkthrough in the current workspace. When you provide a screenshot, video, or existing page as a reference, it first inspects that reference and follows its visible structure, spacing, palette, typography, and diagram language. CSS, JavaScript, and SVG stay inline by default, so the output needs no build step or hosted service. A bundled dependency-free checker verifies document structure, restrictive content security policy, self-contained resources, visible-word budget, and accessible names for inline SVGs. This skills-only plugin has no MCP server, hosted backend, account system, analytics, advertising, cookies, or developer-operated telemetry.",
   "developerName": "Jason",
   "category": "Productivity",
   "capabilities": [
@@ -16,9 +16,9 @@
   "termsOfServiceURL": "https://github.com/zdrjson/codex-eli5/blob/main/TERMS.md",
   "starterPrompts": [
     "Explain how DNS works with a visual ELI5 page.",
-    "Turn this idea into a picture-first explainer.",
+    "How does the Discord bot work? Show the message flow as a visual ELI5 page.",
     "Match this visual reference as an ELI5 HTML page."
   ],
   "availability": "All countries and regions available in the OpenAI submission portal",
-  "releaseNotes": "Initial public-directory submission of ELI5 for Codex. The skills-only plugin creates self-contained, picture-first HTML explainers, includes a dependency-free validator, supports visual-reference matching, and requires no account, MCP server, or reviewer credentials. Version 0.2.3 adds directory-limit metadata and public support, privacy, and terms links."
+  "releaseNotes": "Initial public-directory submission of ELI5 for Codex. The skills-only plugin creates self-contained, picture-first HTML explainers, includes a dependency-free validator, supports visual-reference matching, and requires no account, MCP server, or reviewer credentials. Version 0.2.4 keeps the public policy links in both the submission listing and the installable plugin manifest."
 }

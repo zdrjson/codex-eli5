@@ -2,7 +2,7 @@
 
 A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a difficult topic into a self-contained HTML explainer with big visuals, few words, and a clear step-by-step story.
 
-Version 0.2.3 makes the package ready for public-directory review: final-limit listing metadata, public support and policy links, and a reproducible reviewer test pack.
+Version 0.2.4 makes the package ready for public-directory review: final-limit listing metadata, public support and policy links in the installable manifest, and a reproducible reviewer test pack.
 
 ## Demo
 

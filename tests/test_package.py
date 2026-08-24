@@ -90,6 +90,12 @@ class PackageTests(unittest.TestCase):
         self.assertTrue(parsed.netloc)
         self.assertLessEqual(len(interface["websiteURL"]), 1024)
 
+        for field in ("privacyPolicyURL", "termsOfServiceURL"):
+            parsed = urlparse(interface[field])
+            self.assertEqual("https", parsed.scheme)
+            self.assertTrue(parsed.netloc)
+            self.assertLessEqual(len(interface[field]), 1024)
+
         listing = json.loads(SUBMISSION_LISTING.read_text(encoding="utf-8"))
         for field in (
             "websiteURL",
@@ -112,6 +118,8 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(interface["capabilities"], listing["capabilities"])
         self.assertEqual(interface["defaultPrompt"], listing["starterPrompts"])
         self.assertEqual(interface["websiteURL"], listing["websiteURL"])
+        self.assertEqual(interface["privacyPolicyURL"], listing["privacyPolicyURL"])
+        self.assertEqual(interface["termsOfServiceURL"], listing["termsOfServiceURL"])
 
     def test_submission_test_cases_are_complete(self) -> None:
         cases = json.loads(SUBMISSION_TEST_CASES.read_text(encoding="utf-8"))
