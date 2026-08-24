@@ -33,7 +33,7 @@
       "prompt": "Match this supplied explainer screenshot as closely as possible in a self-contained ELI5 HTML page.",
       "expectedBehavior": "Invoke the eli5 skill, inspect the supplied visual before writing, preserve its visible structure and design grammar, then perform checker and browser verification.",
       "expectedResultShape": "A linked self-contained HTML file that follows the reference's copy, section order, spacing, palette, typography, and diagram language without adding unrelated sections.",
-      "fixtureData": "Attach any simple explainer screenshot containing three numbered diagram panels; no account or private data is required."
+      "fixtureData": "Attach submission/fixtures/reference-explainer.png from https://github.com/zdrjson/codex-eli5/blob/main/submission/fixtures/reference-explainer.png. It is a fixed 706 by 560 pixel fixture with no private data."
     }
   ],
   "negative": [

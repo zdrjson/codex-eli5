@@ -13,6 +13,7 @@ MANIFEST = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
 SUBMISSION_ROOT = ROOT / "submission"
 SUBMISSION_LISTING = SUBMISSION_ROOT / "listing.json"
 SUBMISSION_TEST_CASES = SUBMISSION_ROOT / "test-cases.json"
+REFERENCE_FIXTURE = SUBMISSION_ROOT / "fixtures" / "reference-explainer.png"
 
 
 class PackageTests(unittest.TestCase):
@@ -142,6 +143,18 @@ class PackageTests(unittest.TestCase):
         self.assertNotIn("screenshots", manifest["interface"])
         self.assertFalse((PLUGIN_ROOT / ".mcp.json").exists())
         self.assertFalse((PLUGIN_ROOT / ".app.json").exists())
+
+    def test_reference_fixture_is_fixed_and_reproducible(self) -> None:
+        data = REFERENCE_FIXTURE.read_bytes()
+        self.assertEqual(b"\x89PNG\r\n\x1a\n", data[:8])
+        width, height = struct.unpack(">II", data[16:24])
+        self.assertEqual((706, 560), (width, height))
+        cases = json.loads(SUBMISSION_TEST_CASES.read_text(encoding="utf-8"))
+        reference_case = next(
+            case for case in cases["positive"] if case["id"] == "positive-reference-match"
+        )
+        self.assertIn("submission/fixtures/reference-explainer.png", reference_case["fixtureData"])
+        self.assertIn("https://github.com/zdrjson/codex-eli5/", reference_case["fixtureData"])
 
     def test_public_policy_and_support_pages_exist(self) -> None:
         for name in ("PRIVACY.md", "TERMS.md", "SUPPORT.md"):

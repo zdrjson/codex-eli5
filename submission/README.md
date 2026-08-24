@@ -12,6 +12,8 @@ This folder contains the copy-ready material for the initial skills-only submiss
 
 Use `listing.json` for the Info, Prompts, Global, and Release notes tabs. Use `test-cases.json` for the five positive and three negative reviewer cases.
 
+The visual-reference test uses the fixed public fixture at `fixtures/reference-explainer.png` so every reviewer can reproduce the same input.
+
 ## Upload bundle
 
 Create the final ZIP from the repository's `plugins` directory so the archive has exactly one top-level plugin folder:
