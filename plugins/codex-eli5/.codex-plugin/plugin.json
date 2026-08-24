@@ -1,6 +1,6 @@
 {
   "name": "codex-eli5",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Turn complex topics into visual, beginner-friendly, single-file HTML explainers.",
   "author": {
     "name": "Jason",
@@ -27,7 +27,11 @@
       "Create",
       "Visualize"
     ],
+    "websiteURL": "https://github.com/zdrjson/codex-eli5",
     "brandColor": "#FF6B35",
+    "composerIcon": "./assets/composer-icon.png",
+    "logo": "./assets/logo.png",
+    "logoDark": "./assets/logo-dark.png",
     "defaultPrompt": [
       "Explain how DNS works with a visual ELI5 page.",
       "Turn this idea into a picture-first explainer.",

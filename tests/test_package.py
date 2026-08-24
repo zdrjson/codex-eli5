@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import struct
 import unittest
 from pathlib import Path
 
@@ -39,6 +40,23 @@ class PackageTests(unittest.TestCase):
             self.assertRegex(
                 source, r"(?s)^---\n.*\bname:\s*\S+.*\bdescription:\s*.+?\n---"
             )
+
+    def test_listing_assets_and_website_are_shippable(self) -> None:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        interface = manifest["interface"]
+        self.assertEqual(
+            "https://github.com/zdrjson/codex-eli5", interface["websiteURL"]
+        )
+        for field in ("composerIcon", "logo", "logoDark"):
+            relative = interface[field]
+            self.assertTrue(relative.startswith("./assets/"))
+            asset = PLUGIN_ROOT / relative
+            self.assertTrue(asset.is_file(), f"missing {field}: {asset}")
+            data = asset.read_bytes()
+            self.assertEqual(b"\x89PNG\r\n\x1a\n", data[:8])
+            width, height = struct.unpack(">II", data[16:24])
+            self.assertEqual(width, height)
+            self.assertGreaterEqual(width, 128)
 
     def test_skill_ui_metadata_mentions_the_skill(self) -> None:
         metadata = (

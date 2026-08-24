@@ -2,6 +2,8 @@
 
 A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a difficult topic into a self-contained HTML explainer with big visuals, few words, and a clear step-by-step story.
 
+Version 0.2.2 adds the branded light/dark listing logo, composer icon, and Website metadata used by the Codex plugin details page.
+
 ## What it does
 
 Ask Codex for an ELI5 explanation and the plugin creates a finished `.html` file you can open or share immediately. The artifact uses inline CSS, JavaScript, and SVG, so it needs no build step and does not depend on a hosted service.
