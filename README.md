@@ -4,6 +4,18 @@ A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a di
 
 Version 0.2.3 makes the package ready for public-directory review: final-limit listing metadata, public support and policy links, and a reproducible reviewer test pack.
 
+## Demo
+
+[![ELI5 for Codex — Discord bot explainer scrolling demo](docs/demo/eli5-discord-bot-demo.gif)](example/eli5-discord-bot.html)
+
+This 9.8-second loop is rendered from the Codex result itself, not copied from X. It follows the reference video's visible language: a light-grey scroll canvas, one centred story column, recurring robot and notebook actors, indigo accents, and three progressive line-diagram scenes.
+
+[Open the generated HTML](example/eli5-discord-bot.html) · [Watch the original X demo](https://x.com/trq212/status/2090884854590382515) · [View the follow-up thread](https://x.com/trq212/status/2090884855798407576)
+
+| Reference viewport | Responsive mobile |
+| :---: | :---: |
+| [![Desktop rendering of the Discord bot explainer](docs/demo/eli5-discord-bot-desktop.png)](example/eli5-discord-bot.html) | [![Mobile rendering of the Discord bot explainer](docs/demo/eli5-discord-bot-mobile.png)](example/eli5-discord-bot.html) |
+
 ## What it does
 
 Ask Codex for an ELI5 explanation and the plugin creates a finished `.html` file you can open or share immediately. The artifact uses inline CSS, JavaScript, and SVG, so it needs no build step and does not depend on a hosted service.
