@@ -2,7 +2,7 @@
 
 A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a difficult topic into a self-contained HTML explainer with big visuals, few words, and a clear step-by-step story.
 
-Version 0.2.2 adds the branded light/dark listing logo, composer icon, and Website metadata used by the Codex plugin details page.
+Version 0.2.3 makes the package ready for public-directory review: final-limit listing metadata, public support and policy links, and a reproducible reviewer test pack.
 
 ## What it does
 
@@ -52,6 +52,16 @@ codex plugin add codex-eli5@codex-eli5
 ```
 
 Then start a new task and invoke the skill as `$codex-eli5:eli5 <topic>`.
+
+## Public listing information
+
+- Website: [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5)
+- Support: [GitHub Issues](https://github.com/zdrjson/codex-eli5/issues)
+- Privacy: [PRIVACY.md](PRIVACY.md)
+- Terms: [TERMS.md](TERMS.md)
+- Review materials: [submission/README.md](submission/README.md)
+
+This is an independent community plugin. It is not made by or endorsed by OpenAI or Anthropic.
 
 ## What the checker enforces
 
@@ -112,4 +122,4 @@ Inspired by Anthropic's [`eli5`](https://github.com/anthropics/claude-plugins-co
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Use of the plugin is also described in [TERMS.md](TERMS.md).

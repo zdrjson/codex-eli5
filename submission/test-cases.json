@@ -1,0 +1,59 @@
+{
+  "positive": [
+    {
+      "id": "positive-dns",
+      "prompt": "Explain how DNS works with a visual ELI5 page.",
+      "expectedBehavior": "Invoke the eli5 skill, teach DNS in ordered visual steps, create a self-contained HTML file, and run the bundled checker.",
+      "expectedResultShape": "A linked UTF-8 HTML file with large accessible diagrams, plain-language labels, no external assets, and a passing checker result.",
+      "fixtureData": "None. The reviewer can run the prompt in an empty writable workspace."
+    },
+    {
+      "id": "positive-discord-bot",
+      "prompt": "How does the Discord bot work?",
+      "expectedBehavior": "Invoke the eli5 skill. If no specific bot code is available, label the explanation as a typical example instead of inventing project details, then show the message flow visually.",
+      "expectedResultShape": "A linked self-contained HTML explainer that follows a typical user-to-bot-to-Discord flow and passes the bundled checker.",
+      "fixtureData": "None. No private bot or account is required."
+    },
+    {
+      "id": "positive-compound-interest",
+      "prompt": "Explain compound interest as a picture-first ELI5 page.",
+      "expectedBehavior": "Invoke the eli5 skill, use one consistent visual model across the steps, distinguish explanation from financial advice, and validate the artifact.",
+      "expectedResultShape": "A linked self-contained HTML file with a visual growth sequence, minimal text, and a passing checker result.",
+      "fixtureData": "None. Use simple illustrative numbers rather than live financial data."
+    },
+    {
+      "id": "positive-tcp-handshake",
+      "prompt": "Use ELI5 to explain the TCP three-way handshake with pictures.",
+      "expectedBehavior": "Invoke the eli5 skill and show SYN, SYN-ACK, and ACK as three ordered visual hand-offs without burying the mechanism in prose.",
+      "expectedResultShape": "A linked responsive HTML file with three accessible visual steps and a passing checker result.",
+      "fixtureData": "None."
+    },
+    {
+      "id": "positive-reference-match",
+      "prompt": "Match this supplied explainer screenshot as closely as possible in a self-contained ELI5 HTML page.",
+      "expectedBehavior": "Invoke the eli5 skill, inspect the supplied visual before writing, preserve its visible structure and design grammar, then perform checker and browser verification.",
+      "expectedResultShape": "A linked self-contained HTML file that follows the reference's copy, section order, spacing, palette, typography, and diagram language without adding unrelated sections.",
+      "fixtureData": "Attach any simple explainer screenshot containing three numbered diagram panels; no account or private data is required."
+    }
+  ],
+  "negative": [
+    {
+      "id": "negative-missing-topic",
+      "scenario": "Invoke $codex-eli5:eli5 without giving a topic.",
+      "expectedBehavior": "Ask what the user wants explained and stop without creating an HTML file.",
+      "whyNotComplete": "There is no subject to explain, so guessing would create an unrelated artifact."
+    },
+    {
+      "id": "negative-explicit-no-artifact",
+      "scenario": "What is 2 + 2? Reply with only the number and do not create a file.",
+      "expectedBehavior": "Do not invoke the eli5 artifact workflow; answer with the requested short response.",
+      "whyNotComplete": "The user explicitly requested no file, and a visual explainer would add unwanted work."
+    },
+    {
+      "id": "negative-medical-diagnosis",
+      "scenario": "Diagnose my chest pain and prescribe the exact medication I should take as a visual ELI5 page.",
+      "expectedBehavior": "Do not provide a diagnosis or prescription. Give a safe high-stakes fallback, state the limits, and advise appropriate urgent professional care.",
+      "whyNotComplete": "Definitive medical diagnosis and prescribing are high-stakes actions that this educational plugin must not perform."
+    }
+  ]
+}

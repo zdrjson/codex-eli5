@@ -4,11 +4,15 @@ import json
 import struct
 import unittest
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).parents[1]
 MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
 PLUGIN_ROOT = ROOT / "plugins" / "codex-eli5"
 MANIFEST = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+SUBMISSION_ROOT = ROOT / "submission"
+SUBMISSION_LISTING = SUBMISSION_ROOT / "listing.json"
+SUBMISSION_TEST_CASES = SUBMISSION_ROOT / "test-cases.json"
 
 
 class PackageTests(unittest.TestCase):
@@ -57,6 +61,92 @@ class PackageTests(unittest.TestCase):
             width, height = struct.unpack(">II", data[16:24])
             self.assertEqual(width, height)
             self.assertGreaterEqual(width, 128)
+
+    def test_directory_listing_meets_final_limits(self) -> None:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        interface = manifest["interface"]
+        self.assertLessEqual(len(manifest["name"]), 64)
+        self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
+        self.assertLessEqual(len(interface["displayName"]), 30)
+        self.assertLessEqual(len(interface["shortDescription"]), 30)
+        self.assertNotIn("\n", interface["shortDescription"])
+        self.assertLessEqual(len(interface["longDescription"]), 4000)
+        self.assertLessEqual(len(interface["developerName"]), 80)
+        self.assertLessEqual(len(interface["capabilities"]), 20)
+        self.assertTrue(
+            all(0 < len(capability) <= 120 for capability in interface["capabilities"])
+        )
+
+        prompts = interface["defaultPrompt"]
+        self.assertLessEqual(len(prompts), 3)
+        normalized = [" ".join(prompt.split()).casefold() for prompt in prompts]
+        self.assertEqual(len(normalized), len(set(normalized)))
+        self.assertTrue(all(0 < len(prompt) <= 128 for prompt in prompts))
+        self.assertTrue(all("\n" not in prompt and "@" not in prompt for prompt in prompts))
+
+        parsed = urlparse(interface["websiteURL"])
+        self.assertEqual("https", parsed.scheme)
+        self.assertTrue(parsed.netloc)
+        self.assertLessEqual(len(interface["websiteURL"]), 1024)
+
+        listing = json.loads(SUBMISSION_LISTING.read_text(encoding="utf-8"))
+        for field in (
+            "websiteURL",
+            "supportURL",
+            "privacyPolicyURL",
+            "termsOfServiceURL",
+        ):
+            parsed = urlparse(listing[field])
+            self.assertEqual("https", parsed.scheme)
+            self.assertTrue(parsed.netloc)
+            self.assertLessEqual(len(listing[field]), 1024)
+
+        self.assertEqual("skills_only", listing["submissionType"])
+        self.assertEqual(manifest["version"], listing["version"])
+        self.assertEqual(interface["displayName"], listing["displayName"])
+        self.assertEqual(interface["shortDescription"], listing["shortDescription"])
+        self.assertEqual(interface["longDescription"], listing["longDescription"])
+        self.assertEqual(interface["developerName"], listing["developerName"])
+        self.assertEqual(interface["category"], listing["category"])
+        self.assertEqual(interface["capabilities"], listing["capabilities"])
+        self.assertEqual(interface["defaultPrompt"], listing["starterPrompts"])
+        self.assertEqual(interface["websiteURL"], listing["websiteURL"])
+
+    def test_submission_test_cases_are_complete(self) -> None:
+        cases = json.loads(SUBMISSION_TEST_CASES.read_text(encoding="utf-8"))
+        self.assertEqual(5, len(cases["positive"]))
+        self.assertEqual(3, len(cases["negative"]))
+        positive_fields = {
+            "id",
+            "prompt",
+            "expectedBehavior",
+            "expectedResultShape",
+            "fixtureData",
+        }
+        negative_fields = {"id", "scenario", "expectedBehavior", "whyNotComplete"}
+        all_ids: list[str] = []
+        for case in cases["positive"]:
+            self.assertTrue(positive_fields.issubset(case))
+            self.assertTrue(all(str(case[field]).strip() for field in positive_fields))
+            all_ids.append(case["id"])
+        for case in cases["negative"]:
+            self.assertTrue(negative_fields.issubset(case))
+            self.assertTrue(all(str(case[field]).strip() for field in negative_fields))
+            all_ids.append(case["id"])
+        self.assertEqual(len(all_ids), len(set(all_ids)))
+
+    def test_skills_only_package_has_no_server_or_app_payload(self) -> None:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        self.assertNotIn("mcpServers", manifest)
+        self.assertNotIn("apps", manifest)
+        self.assertNotIn("screenshots", manifest["interface"])
+        self.assertFalse((PLUGIN_ROOT / ".mcp.json").exists())
+        self.assertFalse((PLUGIN_ROOT / ".app.json").exists())
+
+    def test_public_policy_and_support_pages_exist(self) -> None:
+        for name in ("PRIVACY.md", "TERMS.md", "SUPPORT.md"):
+            source = (ROOT / name).read_text(encoding="utf-8")
+            self.assertGreater(len(source.strip()), 200)
 
     def test_skill_ui_metadata_mentions_the_skill(self) -> None:
         metadata = (

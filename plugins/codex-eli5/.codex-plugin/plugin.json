@@ -1,6 +1,6 @@
 {
   "name": "codex-eli5",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Turn complex topics into visual, beginner-friendly, single-file HTML explainers.",
   "author": {
     "name": "Jason",
@@ -19,7 +19,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "ELI5 for Codex",
-    "shortDescription": "Turn hard topics into visual HTML explainers.",
+    "shortDescription": "Picture-first HTML explainers.",
     "longDescription": "Creates a self-contained, beginner-friendly HTML explainer with large visuals, plain language, progressive steps, and faithful visual-reference matching.",
     "developerName": "Jason",
     "category": "Productivity",
