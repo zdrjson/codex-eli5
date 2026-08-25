@@ -1,6 +1,6 @@
 # Support
 
-ELI5 for Codex is published by 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson)). Use [GitHub Issues](https://github.com/zdrjson/codex-eli5/issues) for bug reports, compatibility problems, and feature requests.
+ELI5 is published by 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson)). Use [GitHub Issues](https://github.com/zdrjson/codex-eli5/issues) for bug reports, compatibility problems, and feature requests.
 
 Please include:
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import struct
 import unittest
+import zlib
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -14,6 +15,41 @@ SUBMISSION_ROOT = ROOT / "submission"
 SUBMISSION_LISTING = SUBMISSION_ROOT / "listing.json"
 SUBMISSION_TEST_CASES = SUBMISSION_ROOT / "test-cases.json"
 REFERENCE_FIXTURE = SUBMISSION_ROOT / "fixtures" / "reference-explainer.png"
+SKILL_ROOT = PLUGIN_ROOT / "skills" / "eli5"
+
+
+def verified_png_dimensions(data: bytes) -> tuple[int, int]:
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise AssertionError("not a PNG")
+    position = 8
+    dimensions: tuple[int, int] | None = None
+    saw_iend = False
+    while position < len(data):
+        if position + 12 > len(data):
+            raise AssertionError("truncated PNG chunk")
+        length = struct.unpack(">I", data[position : position + 4])[0]
+        chunk_type = data[position + 4 : position + 8]
+        chunk_end = position + 12 + length
+        if chunk_end > len(data):
+            raise AssertionError("PNG chunk exceeds file length")
+        payload = data[position + 8 : position + 8 + length]
+        expected_crc = struct.unpack(">I", data[position + 8 + length : chunk_end])[0]
+        actual_crc = zlib.crc32(chunk_type + payload) & 0xFFFFFFFF
+        if actual_crc != expected_crc:
+            raise AssertionError(f"invalid PNG CRC for {chunk_type!r}")
+        if chunk_type == b"IHDR":
+            if dimensions is not None or length != 13:
+                raise AssertionError("invalid PNG IHDR")
+            dimensions = struct.unpack(">II", payload[:8])
+        elif chunk_type == b"IEND":
+            if length != 0 or chunk_end != len(data):
+                raise AssertionError("invalid PNG IEND")
+            saw_iend = True
+            break
+        position = chunk_end
+    if dimensions is None or not saw_iend:
+        raise AssertionError("incomplete PNG")
+    return dimensions
 
 
 class PackageTests(unittest.TestCase):
@@ -46,6 +82,27 @@ class PackageTests(unittest.TestCase):
                 source, r"(?s)^---\n.*\bname:\s*\S+.*\bdescription:\s*.+?\n---"
             )
 
+    def test_public_name_changed_without_breaking_internal_identifiers(self) -> None:
+        marketplace = json.loads(MARKETPLACE.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        listing = json.loads(SUBMISSION_LISTING.read_text(encoding="utf-8"))
+        metadata = (SKILL_ROOT / "agents" / "openai.yaml").read_text(
+            encoding="utf-8"
+        )
+        skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertEqual("ELI5", marketplace["interface"]["displayName"])
+        self.assertEqual("ELI5", manifest["interface"]["displayName"])
+        self.assertEqual("ELI5", listing["displayName"])
+        self.assertIn('display_name: "ELI5"', metadata)
+
+        self.assertEqual("codex-eli5", marketplace["name"])
+        self.assertEqual("codex-eli5", marketplace["plugins"][0]["name"])
+        self.assertEqual("codex-eli5", manifest["name"])
+        self.assertEqual("codex-eli5", PLUGIN_ROOT.name)
+        self.assertIn("$codex-eli5:eli5", metadata)
+        self.assertIn("references/claude-eli5.md", skill)
+
     def test_listing_assets_and_website_are_shippable(self) -> None:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         interface = manifest["interface"]
@@ -58,8 +115,7 @@ class PackageTests(unittest.TestCase):
             asset = PLUGIN_ROOT / relative
             self.assertTrue(asset.is_file(), f"missing {field}: {asset}")
             data = asset.read_bytes()
-            self.assertEqual(b"\x89PNG\r\n\x1a\n", data[:8])
-            width, height = struct.unpack(">II", data[16:24])
+            width, height = verified_png_dimensions(data)
             self.assertEqual(width, height)
             self.assertGreaterEqual(width, 128)
 
@@ -155,8 +211,7 @@ class PackageTests(unittest.TestCase):
 
     def test_reference_fixture_is_fixed_and_reproducible(self) -> None:
         data = REFERENCE_FIXTURE.read_bytes()
-        self.assertEqual(b"\x89PNG\r\n\x1a\n", data[:8])
-        width, height = struct.unpack(">II", data[16:24])
+        width, height = verified_png_dimensions(data)
         self.assertEqual((706, 560), (width, height))
         cases = json.loads(SUBMISSION_TEST_CASES.read_text(encoding="utf-8"))
         reference_case = next(

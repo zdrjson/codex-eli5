@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "anthropics/claude-plugins-community",
+    "ref": "main",
+    "path": "eli5",
+    "commitSha": "a727be1c7bd6064419b6f60d71993a19198adc17",
+    "treeSha": "cf4f22e86a0fdf4b9262788603200975ddfe5707",
+    "marketplaceEntrySha256": "dbc0f6d3d73009e4aace55644aafa86e95426dff8eb887922cea2043c987759a",
+    "committedAt": "2026-08-24T17:07:14Z",
+    "url": "https://github.com/anthropics/claude-plugins-community/tree/a727be1c7bd6064419b6f60d71993a19198adc17/eli5"
+  },
+  "marketplaceEntry": {
+    "name": "eli5",
+    "source": "./eli5",
+    "strict": false,
+    "description": "Explain any topic like I'm 5: a dead-simple HTML picture explainer with big visuals and few words. Use /eli5 <topic>.",
+    "category": "learning"
+  },
+  "files": [
+    {
+      "path": ".claude-plugin/plugin.json",
+      "mode": "100644",
+      "gitBlobSha": "5573635acadd3d48e65cb674ebeb2bd41f0cc139",
+      "sha256": "6745ff91dd0ae7fea5fb51ef933390313a677da04aaa4d7a05052942777be11f",
+      "size": 318,
+      "encoding": "utf-8",
+      "content": "{\n  \"name\": \"eli5\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Explain any topic like I'm 5: a dead-simple HTML picture explainer with big visuals and few words. Use /eli5 <topic>.\",\n  \"author\": {\n    \"name\": \"Thariq Shihipar\"\n  },\n  \"license\": \"MIT\",\n  \"keywords\": [\"explain\", \"eli5\", \"learning\", \"explainer\", \"html\"]\n}\n"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "gitBlobSha": "b0dbc035cda6de4cc86c9758a7956b7da7140a1e",
+      "sha256": "2b4f2ce086e003fcfee1075fe1cf0e86253d9ac21d477f881b39a7f3e7957ffe",
+      "size": 197,
+      "encoding": "utf-8",
+      "content": "# eli5\n\nExplain any topic like I'm 5.\n\n```\n/eli5 how does DNS work\n```\n\nProduces a HTML artifact with big pictures and very few words that explains the topic to someone who knows nothing about it.\n"
+    },
+    {
+      "path": "skills/eli5/SKILL.md",
+      "mode": "100644",
+      "gitBlobSha": "ff6b33c9b3277c493e03e47fad327c6ad318e1d5",
+      "sha256": "3bb95cd13852051c5a1862e8b94da1de7cfba7415d418ab0ca4d762527d1b9a5",
+      "size": 321,
+      "encoding": "utf-8",
+      "content": "---\nname: eli5\ndescription: Explain a topic like I'm a 5 year old. Use when the user types /eli5 <topic> or asks for a dead-simple picture explainer of how something works.\n---\n\n# eli5\n\nExplain like I'm someone who knows nothing about this topic, using a HTML artifact with big pictures and few words.\n\nTopic: $ARGUMENTS\n"
+    }
+  ]
+}

@@ -394,6 +394,40 @@ def _code_mask(source: str, line_comments: bool) -> List[bool]:
     return mask
 
 
+def _strip_javascript_comments(source: str) -> str:
+    """Remove JavaScript comments while preserving strings and line layout."""
+
+    output: List[str] = []
+    position = 0
+    quote = ""
+    while position < len(source):
+        character = source[position]
+        if quote:
+            output.append(character)
+            if character == "\\" and position + 1 < len(source):
+                position += 1
+                output.append(source[position])
+            elif character == quote:
+                quote = ""
+        elif character in {"'", '"', "`"}:
+            quote = character
+            output.append(character)
+        elif source.startswith("/*", position):
+            end = source.find("*/", position + 2)
+            stop = len(source) if end < 0 else end + 2
+            output.extend("\n" if item == "\n" else " " for item in source[position:stop])
+            position = stop - 1
+        elif source.startswith("//", position):
+            end = source.find("\n", position + 2)
+            stop = len(source) if end < 0 else end
+            output.extend(" " for _ in source[position:stop])
+            position = stop - 1
+        else:
+            output.append(character)
+        position += 1
+    return "".join(output)
+
+
 def _css_function_body(css: str, open_parenthesis: int) -> Tuple[str, int]:
     depth = 1
     position = open_parenthesis + 1
@@ -503,6 +537,13 @@ def _css_external_references(css: str) -> List[str]:
     for value in _css_image_set_references(css, code_mask):
         if not _is_inline_reference(value) and value not in references:
             references.append(value)
+    for match in re.finditer(r"\blocal\s*\(", css, flags=re.IGNORECASE):
+        if not code_mask[match.start()]:
+            continue
+        body, _ = _css_function_body(css, match.end() - 1)
+        value = f"local({body.strip()})"
+        if value not in references:
+            references.append(value)
     return references
 
 
@@ -562,6 +603,7 @@ class ArtifactParser(HTMLParser):
         self._style_depth = 0
         self._script_depth = 0
         self._css_parts: List[str] = []
+        self._style_block_parts: List[str] = []
         self._script_parts: List[str] = []
         self._visible_text: List[str] = []
         self._id_text_parts: Dict[str, List[str]] = {}
@@ -574,6 +616,7 @@ class ArtifactParser(HTMLParser):
         self._svg_title_flags: List[bool] = []
         self._svg_title_parts: List[str] = []
         self._svg_records: List[Tuple[bool, bool, bool, List[str]]] = []
+        self._has_svg_motion = False
 
     def _add_external(self, context: str, value: str) -> None:
         item = f"{context}={_display_reference(value)}"
@@ -756,8 +799,14 @@ class ArtifactParser(HTMLParser):
         elif tag == "script":
             self._script_depth += 1
 
-        if tag == "img" and "alt" not in attr_names:
+        is_image_input = (
+            tag == "input" and values.get("type", "").strip().lower() == "image"
+        )
+        if (tag == "img" or is_image_input) and "alt" not in attr_names:
             self.images_without_alt += 1
+
+        if tag in {"animate", "animatemotion", "animatetransform"}:
+            self._has_svg_motion = True
 
         if tag == "svg":
             if self._svg_depth == 0:
@@ -882,6 +931,7 @@ class ArtifactParser(HTMLParser):
             self._svg_title_parts.append(data)
         if self._style_depth:
             self._css_parts.append(data)
+            self._style_block_parts.append(data)
         if self._script_depth:
             self._script_parts.append(data)
         for _, element_id in self._active_id_elements:
@@ -935,12 +985,16 @@ class ArtifactParser(HTMLParser):
                 resources.append(item)
         return resources
 
+    def has_nonempty_style_block(self) -> bool:
+        css = _strip_css_comments("\n".join(self._style_block_parts))
+        return bool(css.strip())
+
     def has_motion_without_reduction(self) -> bool:
         css = _strip_css_comments("\n".join(self._css_parts))
-        code_mask = _code_mask(css, line_comments=False)
-        has_motion = bool(
+        css_code_mask = _code_mask(css, line_comments=False)
+        has_css_motion = bool(
             any(
-                code_mask[match.start()]
+                css_code_mask[match.start()]
                 for match in re.finditer(
                     r"\b(?:animation|transition)(?:-[\w-]+)?\s*:",
                     css,
@@ -948,14 +1002,34 @@ class ArtifactParser(HTMLParser):
                 )
             )
         )
-        has_reduce_query = any(
-            code_mask[match.start()]
+        has_css_reduce_query = any(
+            css_code_mask[match.start()]
             for match in re.finditer(
                 r"\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)",
                 css,
                 flags=re.IGNORECASE,
             )
         )
+        script = "\n".join(self._script_parts)
+        script_code_mask = _code_mask(script, line_comments=True)
+        has_script_motion = any(
+            script_code_mask[match.start()]
+            for match in re.finditer(
+                r"\.\s*animate\s*\(", script, flags=re.IGNORECASE
+            )
+        )
+        script_without_comments = _strip_javascript_comments(script)
+        has_script_reduce_query = any(
+            script_code_mask[match.start()]
+            for match in re.finditer(
+                r"\bmatchMedia\s*\(\s*(['\"`])[^'\"`]*"
+                r"prefers-reduced-motion\s*:\s*reduce[^'\"`]*\1\s*\)",
+                script_without_comments,
+                flags=re.IGNORECASE,
+            )
+        )
+        has_motion = has_css_motion or has_script_motion or self._has_svg_motion
+        has_reduce_query = has_css_reduce_query or has_script_reduce_query
         return has_motion and not has_reduce_query
 
 
@@ -1011,7 +1085,7 @@ def audit(
         result.errors.append("missing viewport meta tag")
     elif "width=device-width" not in parser.viewport.lower().replace(" ", ""):
         result.errors.append("viewport must include width=device-width")
-    if not parser.has_style:
+    if not parser.has_style or not parser.has_nonempty_style_block():
         result.errors.append("missing inline style block")
     if not parser.has_body:
         result.errors.append("missing body element")

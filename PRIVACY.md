@@ -2,7 +2,7 @@
 
 Effective date: August 24, 2026
 
-This policy applies to the ELI5 for Codex plugin maintained by 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson)) at [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5).
+This policy applies to the ELI5 plugin maintained by 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson)) at [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5).
 
 ## What the plugin does
 

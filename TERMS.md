@@ -2,7 +2,7 @@
 
 Effective date: August 24, 2026
 
-These terms apply to your use of the ELI5 for Codex plugin maintained by 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson)) at [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5). By installing or using the plugin, you agree to these terms.
+These terms apply to your use of the ELI5 plugin maintained by 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson)) at [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5). By installing or using the plugin, you agree to these terms.
 
 ## Permitted use
 

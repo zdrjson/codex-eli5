@@ -1,6 +1,6 @@
 {
   "name": "codex-eli5",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Turn complex topics into visual, beginner-friendly, single-file HTML explainers.",
   "author": {
     "name": "德荣 张",
@@ -18,9 +18,9 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "ELI5 for Codex",
+    "displayName": "ELI5",
     "shortDescription": "Picture-first HTML explainers.",
-    "longDescription": "Turn a difficult topic into a beginner-friendly, picture-first HTML explainer saved as one portable file. ELI5 for Codex uses large diagrams, plain language, and progressive steps so readers can follow the mechanism without a wall of text. For a normal topic, it creates an ordered visual walkthrough in the current workspace. When you provide a screenshot, video, or existing page as a reference, it first inspects that reference and follows its visible structure, spacing, palette, typography, and diagram language. CSS, JavaScript, and SVG stay inline by default, so the output needs no build step or hosted service. A bundled dependency-free checker verifies document structure, restrictive content security policy, self-contained resources, visible-word budget, and accessible names for inline SVGs. This skills-only plugin has no MCP server, hosted backend, account system, analytics, advertising, cookies, or developer-operated telemetry.",
+    "longDescription": "Turn a difficult topic into a beginner-friendly, picture-first HTML explainer saved as one portable file. ELI5 uses large diagrams, plain language, and progressive steps so readers can follow the mechanism without a wall of text. For a normal topic, it creates an ordered visual walkthrough in the current workspace. When you provide a screenshot, video, or existing page as a reference, it first inspects that reference and follows its visible structure, spacing, palette, typography, and diagram language. CSS, JavaScript, and SVG stay inline by default, so the output needs no build step or hosted service. A bundled dependency-free checker verifies document structure, restrictive content security policy, self-contained resources, visible-word budget, and accessible names for inline SVGs. This skills-only plugin has no MCP server, hosted backend, account system, analytics, advertising, cookies, or developer-operated telemetry.",
     "developerName": "德荣 张",
     "category": "Productivity",
     "capabilities": [

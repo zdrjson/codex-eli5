@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
-  <title id="title">ELI5 for Codex logo</title>
+  <title id="title">ELI5 logo</title>
   <rect x="16" y="16" width="480" height="480" rx="112" fill="#FF6B35"/>
   <path d="M128 96h256c35.3 0 64 28.7 64 64v184c0 35.3-28.7 64-64 64H224l-86 54 20-54h-30c-35.3 0-64-28.7-64-64V160c0-35.3 28.7-64 64-64Z" fill="#FFFFFF"/>
   <circle cx="162" cy="252" r="42" fill="#4F50E7"/>

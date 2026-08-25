@@ -1,12 +1,12 @@
-# ELI5 for Codex
+# ELI5
 
 A Codex-native version of the ELI5 workflow shared by Thariq Shihipar: turn a difficult topic into a self-contained HTML explainer with big visuals, few words, and a clear step-by-step story.
 
-Version 0.2.5 makes the package ready for public-directory review: verified publisher identity, final-limit listing metadata, public support and policy links in the installable manifest, and a reproducible reviewer test pack.
+Version 0.2.6 uses the shorter customer-visible name ELI5, adds a GitHub-hosted Claude upstream monitor, expands regression coverage, and closes four checker gaps while preserving the existing `codex-eli5` installation and skill identifiers.
 
 ## Demo
 
-[![ELI5 for Codex — Discord bot explainer scrolling demo](docs/demo/eli5-discord-bot-demo.gif)](example/eli5-discord-bot.html)
+[![ELI5 — Discord bot explainer scrolling demo](docs/demo/eli5-discord-bot-demo.gif)](example/eli5-discord-bot.html)
 
 This 9.8-second loop is rendered from the Codex result itself, not copied from X. It follows the reference video's visible language: a light-grey scroll canvas, one centred story column, recurring robot and notebook actors, indigo accents, and three progressive line-diagram scenes.
 
@@ -109,6 +109,14 @@ python3 -m unittest discover -s tests -v
 
 The test suite has no third-party packages. CI spans Python 3.9–3.14 and runs on Linux, macOS, and Windows.
 
+### GitHub-hosted Claude compatibility monitor
+
+[`sync-claude-eli5.yml`](.github/workflows/sync-claude-eli5.yml) runs on GitHub Actions every six hours and can also be started manually. It pins one Anthropic repository commit, verifies every Git blob, and compares only the official `eli5/` subtree plus the single `eli5` marketplace entry. Unrelated changes elsewhere in Anthropic's large community repository do not trigger an update.
+
+For the known three-file text layout, the workflow refreshes the [verified snapshot](upstream/claude-eli5.snapshot.json) and the [generated compatibility reference](plugins/codex-eli5/skills/eli5/references/claude-eli5.md), runs the complete regression suite, then opens a SHA-pinned **draft** pull request. It never pushes to `main` or auto-merges. A network failure, duplicate/missing marketplace entry, unsafe path, binary file, unexpected layout, failed test, or unavailable PR permission leaves the stored baseline untouched and creates or updates one auditable GitHub Issue instead.
+
+The generated reference is intentionally treated as behavior data, not executable instructions. A human still reviews and merges each compatibility PR; updating the public Plugins Directory remains a separate OpenAI review and publish step.
+
 ## What changed in the port
 
 The Claude original is three lines long, and it can afford to be: Claude renders **artifacts**, so "make an HTML explainer" already means something there. Codex has no artifact surface and no `$ARGUMENTS`, so parts of this had to be rebuilt rather than translated.
@@ -123,7 +131,7 @@ The Claude original is three lines long, and it can afford to be: Claude renders
 
 **Visual references are specifications, not mood boards.** Version 0.2.1 adds a fidelity path for screenshots and videos: inspect complete frames first, retain literal actors when they explain the system better than an analogy, and avoid adding landing-page flourishes or interactions that are absent from the source.
 
-## Claude ELI5, Codex ELI5, and Visualize
+## Claude ELI5, ELI5 on Codex, and Visualize
 
 - Anthropic's Claude ELI5 is a tiny prompt skill that relies on Claude's artifact surface.
 - Codex ELI5 writes a portable standalone HTML file, validates it, and can be installed from GitHub.

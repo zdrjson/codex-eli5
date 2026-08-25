@@ -81,6 +81,37 @@ class CheckHtmlTests(unittest.TestCase):
         )
         self.assertIn("1 image(s) missing an alt attribute", errors)
 
+    def test_input_image_requires_alt(self) -> None:
+        missing = self.write_html(
+            self.valid_html(
+                '<main><h1>Topic</h1><input type="IMAGE" '
+                'src="data:image/png;base64,AAAA"></main>'
+            )
+        )
+        self.assertIn(
+            "1 image(s) missing an alt attribute", CHECK_HTML.check(missing)
+        )
+
+        named = self.write_html(
+            self.valid_html(
+                '<main><h1>Topic</h1><input type="image" '
+                'src="data:image/png;base64,AAAA" alt="Diagram"></main>'
+            )
+        )
+        self.assertEqual([], CHECK_HTML.check(named))
+
+    def test_style_block_must_contain_css(self) -> None:
+        empty = self.write_html(
+            self.valid_html(
+                '<main style="color:#111"><h1>Topic</h1></main>',
+                css=" \n /* generated later */ ",
+            )
+        )
+        self.assertIn("missing inline style block", CHECK_HTML.check(empty))
+
+        nonempty = self.write_html(self.valid_html(css="body{color:#111}"))
+        self.assertNotIn("missing inline style block", CHECK_HTML.check(nonempty))
+
     def test_allows_outbound_citation_and_decorative_data_image(self) -> None:
         path = self.write_html(
             self.valid_html(
@@ -163,6 +194,22 @@ class CheckHtmlTests(unittest.TestCase):
         self.assertIn("./hero.webp", external)
         self.assertNotIn("fake.png", external)
         self.assertNotIn("demo.png", external)
+
+    def test_local_font_source_is_a_machine_dependency(self) -> None:
+        path = self.write_html(
+            self.valid_html(
+                css=(
+                    '@font-face{font-family:LocalOnly;src:local("Helvetica Neue")}'
+                    "body{font-family:LocalOnly,sans-serif}"
+                )
+            )
+        )
+        external = next(
+            item
+            for item in CHECK_HTML.check(path)
+            if item.startswith("disallowed resource references")
+        )
+        self.assertIn('local("Helvetica Neue")', external)
 
     def test_detects_protocol_relative_srcset_and_unnamed_svg(self) -> None:
         path = self.write_html(
@@ -444,6 +491,82 @@ class CheckHtmlTests(unittest.TestCase):
         self.assertNotIn(
             "motion styles found without prefers-reduced-motion",
             CHECK_HTML.audit(reduced).warnings,
+        )
+
+    def test_svg_and_web_animations_require_motion_reduction(self) -> None:
+        warning = "motion styles found without prefers-reduced-motion"
+        svg = self.write_html(
+            self.valid_html(
+                '<main><h1>T</h1><svg role="img" aria-label="Pulse">'
+                '<animate attributeName="opacity" values="0;1" dur="1s">'
+                "</animate></svg></main>"
+            )
+        )
+        self.assertIn(warning, CHECK_HTML.audit(svg).warnings)
+
+        svg_reduced = self.write_html(
+            self.valid_html(
+                '<main><h1>T</h1><svg role="img" aria-label="Pulse">'
+                '<animateMotion path="M0,0 L10,0"></animateMotion>'
+                "</svg></main>",
+                css=(
+                    "body{color:#111}"
+                    "@media (prefers-reduced-motion: reduce){svg{display:none}}"
+                ),
+            )
+        )
+        self.assertNotIn(warning, CHECK_HTML.audit(svg_reduced).warnings)
+
+        web_animation = self.write_html(
+            self.valid_html(
+                script=(
+                    'document.querySelector("main").animate('
+                    "[{opacity:0},{opacity:1}],{duration:100});"
+                )
+            )
+        )
+        self.assertIn(warning, CHECK_HTML.audit(web_animation).warnings)
+
+        web_animation_reduced = self.write_html(
+            self.valid_html(
+                script=(
+                    'const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;'
+                    "if (!reduced) { document.body.animate([], {duration:100}); }"
+                )
+            )
+        )
+        self.assertNotIn(warning, CHECK_HTML.audit(web_animation_reduced).warnings)
+
+        comment_is_not_handling = self.write_html(
+            self.valid_html(
+                script=(
+                    "// prefers-reduced-motion: reduce\n"
+                    "document.body.animate([], {duration:100});"
+                )
+            )
+        )
+        self.assertIn(warning, CHECK_HTML.audit(comment_is_not_handling).warnings)
+
+        string_is_not_handling = self.write_html(
+            self.valid_html(
+                script=(
+                    'const note = "prefers-reduced-motion: reduce";'
+                    "document.body.animate([], {duration:100});"
+                )
+            )
+        )
+        self.assertIn(warning, CHECK_HTML.audit(string_is_not_handling).warnings)
+
+        quoted_code_is_not_handling = self.write_html(
+            self.valid_html(
+                script=(
+                    "const example = 'matchMedia(\"(prefers-reduced-motion: reduce)\")';"
+                    "document.body.animate([], {duration:100});"
+                )
+            )
+        )
+        self.assertIn(
+            warning, CHECK_HTML.audit(quoted_code_is_not_handling).warnings
         )
 
     def test_utf8_bom_is_accepted(self) -> None:

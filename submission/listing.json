@@ -1,9 +1,9 @@
 {
   "submissionType": "skills_only",
-  "version": "0.2.5",
-  "displayName": "ELI5 for Codex",
+  "version": "0.2.6",
+  "displayName": "ELI5",
   "shortDescription": "Picture-first HTML explainers.",
-  "longDescription": "Turn a difficult topic into a beginner-friendly, picture-first HTML explainer saved as one portable file. ELI5 for Codex uses large diagrams, plain language, and progressive steps so readers can follow the mechanism without a wall of text. For a normal topic, it creates an ordered visual walkthrough in the current workspace. When you provide a screenshot, video, or existing page as a reference, it first inspects that reference and follows its visible structure, spacing, palette, typography, and diagram language. CSS, JavaScript, and SVG stay inline by default, so the output needs no build step or hosted service. A bundled dependency-free checker verifies document structure, restrictive content security policy, self-contained resources, visible-word budget, and accessible names for inline SVGs. This skills-only plugin has no MCP server, hosted backend, account system, analytics, advertising, cookies, or developer-operated telemetry.",
+  "longDescription": "Turn a difficult topic into a beginner-friendly, picture-first HTML explainer saved as one portable file. ELI5 uses large diagrams, plain language, and progressive steps so readers can follow the mechanism without a wall of text. For a normal topic, it creates an ordered visual walkthrough in the current workspace. When you provide a screenshot, video, or existing page as a reference, it first inspects that reference and follows its visible structure, spacing, palette, typography, and diagram language. CSS, JavaScript, and SVG stay inline by default, so the output needs no build step or hosted service. A bundled dependency-free checker verifies document structure, restrictive content security policy, self-contained resources, visible-word budget, and accessible names for inline SVGs. This skills-only plugin has no MCP server, hosted backend, account system, analytics, advertising, cookies, or developer-operated telemetry.",
   "developerName": "德荣 张",
   "category": "Productivity",
   "capabilities": [
@@ -20,5 +20,5 @@
     "Match this visual reference as an ELI5 HTML page."
   ],
   "availability": "All countries and regions available in the OpenAI submission portal",
-  "releaseNotes": "Initial public-directory submission of ELI5 for Codex. The skills-only plugin creates self-contained, picture-first HTML explainers, includes a dependency-free validator, supports visual-reference matching, and requires no account, MCP server, or reviewer credentials. Version 0.2.5 aligns the public publisher identity across the installable manifest, listing, website, support page, privacy policy, terms, license, and notice."
+  "releaseNotes": "Version 0.2.6 uses the shorter customer-visible name ELI5 while preserving the codex-eli5 installation and skill identifiers. It adds a GitHub-hosted monitor for the official Claude ELI5 subtree and marketplace entry, expands automated compatibility and safety coverage, and fixes checker gaps for image inputs, empty style blocks, local fonts, and unguarded SVG or Web Animations. The skills-only plugin still requires no account, MCP server, or reviewer credentials."
 }

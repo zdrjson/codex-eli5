@@ -1,0 +1,376 @@
+name: Sync Claude ELI5 upstream
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: sync-claude-eli5
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SNAPSHOT_PATH: upstream/claude-eli5.snapshot.json
+      REFERENCE_PATH: plugins/codex-eli5/skills/eli5/references/claude-eli5.md
+      ATTENTION_ISSUE_TITLE: "[automation] Claude ELI5 upstream sync needs attention"
+    steps:
+      - name: Check out the default branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Inspect and safely generate the upstream update
+        id: sync
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/sync_claude_eli5.py \
+            --write \
+            --report "$RUNNER_TEMP/claude-eli5-report.md" \
+            2>&1 | tee "$RUNNER_TEMP/claude-eli5-sync.log"
+
+      - name: Reject an unsafe or unapplied upstream change
+        id: guard
+        if: >-
+          ${{
+            steps.sync.outcome == 'success' &&
+            (
+              steps.sync.outputs.auto_sync_safe != 'true' ||
+              (
+                steps.sync.outputs.changed == 'true' &&
+                steps.sync.outputs.applied != 'true'
+              )
+            )
+          }}
+        shell: bash
+        run: |
+          echo "The upstream change needs manual review; the stored baseline was not advanced." >&2
+          exit 1
+
+      - name: Run the complete regression suite
+        id: tests
+        if: >-
+          ${{
+            steps.sync.outputs.changed == 'true' &&
+            steps.sync.outputs.auto_sync_safe == 'true' &&
+            steps.sync.outputs.applied == 'true'
+          }}
+        shell: bash
+        run: python -m unittest discover -s tests -v
+
+      - name: Publish a SHA-pinned draft pull request
+        id: publish
+        if: >-
+          ${{
+            steps.sync.outputs.changed == 'true' &&
+            steps.sync.outputs.auto_sync_safe == 'true' &&
+            steps.sync.outputs.applied == 'true' &&
+            steps.tests.outcome == 'success'
+          }}
+        env:
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          UPSTREAM_COMMIT_SHA: ${{ steps.sync.outputs.commit_sha }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$UPSTREAM_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The sync output did not contain a valid upstream Git SHA." >&2
+            exit 1
+          fi
+          if [[ -z "$BASE_BRANCH" ]]; then
+            echo "The repository default branch is unavailable." >&2
+            exit 1
+          fi
+
+          SHORT_SHA="${UPSTREAM_COMMIT_SHA:0:12}"
+          SYNC_BRANCH="automation/claude-eli5-${SHORT_SHA}"
+          export SYNC_BRANCH
+
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+
+          allowed = {
+              os.environ["SNAPSHOT_PATH"],
+              os.environ["REFERENCE_PATH"],
+          }
+          raw = subprocess.check_output(
+              ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"]
+          )
+          changed = set()
+          for entry in raw.split(b"\0"):
+              if not entry:
+                  continue
+              if len(entry) < 4:
+                  raise SystemExit("git returned an invalid status entry")
+              changed.add(entry[3:].decode("utf-8"))
+          unexpected = changed - allowed
+          if unexpected:
+              names = ", ".join(sorted(unexpected))
+              raise SystemExit(f"refusing to publish unexpected files: {names}")
+          if not changed:
+              raise SystemExit("the sync reported a change but generated no file changes")
+          PY
+
+          OPEN_PR_URL="$(
+            gh pr list \
+              --state open \
+              --base "$BASE_BRANCH" \
+              --head "$SYNC_BRANCH" \
+              --json url \
+              --jq '.[0].url // ""'
+          )"
+          ANY_PR_URL="$(
+            gh pr list \
+              --state all \
+              --base "$BASE_BRANCH" \
+              --head "$SYNC_BRANCH" \
+              --json url \
+              --jq '.[0].url // ""'
+          )"
+
+          set +e
+          git ls-remote --exit-code --heads origin "refs/heads/$SYNC_BRANCH" \
+            >"$RUNNER_TEMP/claude-eli5-remote-branch.txt"
+          REMOTE_STATUS=$?
+          set -e
+
+          if [[ "$REMOTE_STATUS" -eq 0 ]]; then
+            git fetch --no-tags origin \
+              "refs/heads/$SYNC_BRANCH:refs/remotes/origin/$SYNC_BRANCH"
+
+            python - <<'PY'
+          import os
+          import subprocess
+
+          allowed = {
+              os.environ["SNAPSHOT_PATH"],
+              os.environ["REFERENCE_PATH"],
+          }
+          base = f"origin/{os.environ['BASE_BRANCH']}"
+          branch = f"origin/{os.environ['SYNC_BRANCH']}"
+          raw = subprocess.check_output(
+              ["git", "diff", "--name-only", "-z", f"{base}...{branch}"]
+          )
+          changed = {
+              item.decode("utf-8") for item in raw.split(b"\0") if item
+          }
+          if not changed:
+              raise SystemExit("the existing sync branch has no update")
+          unexpected = changed - allowed
+          if unexpected:
+              names = ", ".join(sorted(unexpected))
+              raise SystemExit(
+                  f"the existing sync branch contains unexpected files: {names}"
+              )
+          PY
+
+            if ! git diff --quiet "refs/remotes/origin/$SYNC_BRANCH" -- \
+              "$SNAPSHOT_PATH" "$REFERENCE_PATH"; then
+              echo "The existing SHA branch does not match the generated update." >&2
+              exit 1
+            fi
+
+            if [[ -n "$OPEN_PR_URL" ]]; then
+              echo "The SHA-pinned draft pull request already exists: $OPEN_PR_URL"
+              exit 0
+            fi
+            if [[ -n "$ANY_PR_URL" ]]; then
+              echo "A closed or merged pull request already used this SHA branch: $ANY_PR_URL" >&2
+              exit 1
+            fi
+          elif [[ "$REMOTE_STATUS" -eq 2 ]]; then
+            if [[ -n "$ANY_PR_URL" ]]; then
+              echo "A prior pull request already used this SHA branch: $ANY_PR_URL" >&2
+              exit 1
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git switch -c "$SYNC_BRANCH"
+            git add -- "$SNAPSHOT_PATH" "$REFERENCE_PATH"
+
+            python - <<'PY'
+          import os
+          import subprocess
+
+          expected = {
+              os.environ["SNAPSHOT_PATH"],
+              os.environ["REFERENCE_PATH"],
+          }
+          raw = subprocess.check_output(
+              ["git", "diff", "--cached", "--name-only", "-z"]
+          )
+          staged = {item.decode("utf-8") for item in raw.split(b"\0") if item}
+          if not staged or not staged.issubset(expected):
+              names = ", ".join(sorted(staged)) or "none"
+              raise SystemExit(f"refusing unexpected staged files: {names}")
+          PY
+
+            git commit -m "chore: sync Claude ELI5 ${SHORT_SHA}"
+            git push --set-upstream origin "$SYNC_BRANCH"
+          else
+            echo "Unable to determine whether the SHA branch already exists." >&2
+            exit "$REMOTE_STATUS"
+          fi
+
+          PR_BODY="$RUNNER_TEMP/claude-eli5-pr-body.md"
+          cp "$RUNNER_TEMP/claude-eli5-report.md" "$PR_BODY"
+          cat >>"$PR_BODY" <<'EOF'
+
+          ## Automated verification
+
+          - The complete Python unittest suite passed before this branch was pushed.
+          - Only the pinned upstream snapshot and generated compatibility reference are included.
+          - This pull request is deliberately left as a draft for human review and cannot auto-merge.
+          EOF
+
+          gh pr create \
+            --draft \
+            --base "$BASE_BRANCH" \
+            --head "$SYNC_BRANCH" \
+            --title "chore: sync Claude ELI5 ${SHORT_SHA}" \
+            --body-file "$PR_BODY"
+
+      - name: Create or update the single attention issue
+        id: attention
+        if: >-
+          ${{
+            always() &&
+            (
+              steps.sync.outcome == 'failure' ||
+              steps.guard.outcome == 'failure' ||
+              steps.tests.outcome == 'failure' ||
+              steps.publish.outcome == 'failure'
+            )
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ISSUE_BODY="$RUNNER_TEMP/claude-eli5-attention-issue.md"
+          {
+            echo "# Claude ELI5 upstream sync needs attention"
+            echo
+            printf -- '- Workflow run: %s\n' "$RUN_URL"
+            printf -- '- Sync: `%s`\n' "$SYNC_OUTCOME"
+            printf -- '- Safety guard: `%s`\n' "$GUARD_OUTCOME"
+            printf -- '- Tests: `%s`\n' "$TEST_OUTCOME"
+            printf -- '- Draft PR: `%s`\n' "$PUBLISH_OUTCOME"
+            echo
+            if [[ -f "$RUNNER_TEMP/claude-eli5-report.md" ]]; then
+              cat "$RUNNER_TEMP/claude-eli5-report.md"
+            else
+              echo "The monitor failed before it could produce an upstream report."
+            fi
+            if [[ -f "$RUNNER_TEMP/claude-eli5-sync.log" ]]; then
+              echo
+              echo "## Monitor log tail"
+              echo
+              echo '```text'
+              tail -n 80 "$RUNNER_TEMP/claude-eli5-sync.log"
+              echo '```'
+            fi
+          } >"$ISSUE_BODY"
+
+          ISSUE_RECORD="$(
+            gh issue list --state all --limit 100 --json number,title,state |
+              python -c 'import json, os, sys; title = os.environ["ATTENTION_ISSUE_TITLE"]; matches = [item for item in json.load(sys.stdin) if item.get("title") == title]; print("{}:{}".format(matches[0]["number"], matches[0]["state"]) if matches else "")'
+          )"
+
+          if [[ -n "$ISSUE_RECORD" ]]; then
+            if [[ ! "$ISSUE_RECORD" =~ ^[0-9]+:(OPEN|CLOSED)$ ]]; then
+              echo "The existing attention issue record is invalid." >&2
+              exit 1
+            fi
+            ISSUE_NUMBER="${ISSUE_RECORD%%:*}"
+            ISSUE_STATE="${ISSUE_RECORD##*:}"
+            if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
+              gh issue reopen "$ISSUE_NUMBER"
+            fi
+            gh issue comment "$ISSUE_NUMBER" --body-file "$ISSUE_BODY"
+          else
+            gh issue create \
+              --title "$ATTENTION_ISSUE_TITLE" \
+              --body-file "$ISSUE_BODY"
+          fi
+
+      - name: Close a recovered attention issue
+        if: >-
+          ${{
+            always() &&
+            steps.sync.outcome == 'success' &&
+            steps.guard.outcome != 'failure' &&
+            steps.tests.outcome != 'failure' &&
+            steps.publish.outcome != 'failure'
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ISSUE_NUMBER="$(
+            gh issue list --state open --limit 100 --json number,title |
+              python -c 'import json, os, sys; title = os.environ["ATTENTION_ISSUE_TITLE"]; matches = [item for item in json.load(sys.stdin) if item.get("title") == title]; print(matches[0]["number"] if matches else "")'
+          )"
+          if [[ -z "$ISSUE_NUMBER" ]]; then
+            exit 0
+          fi
+          if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "The attention issue number is invalid." >&2
+            exit 1
+          fi
+
+          RECOVERY_BODY="$RUNNER_TEMP/claude-eli5-recovery.md"
+          {
+            echo "The scheduled monitor recovered successfully."
+            echo
+            printf -- 'Verified run: %s\n' "$RUN_URL"
+          } >"$RECOVERY_BODY"
+          gh issue comment "$ISSUE_NUMBER" --body-file "$RECOVERY_BODY"
+          gh issue close "$ISSUE_NUMBER"
+
+      - name: Preserve the failed status after escalation
+        if: >-
+          ${{
+            always() &&
+            steps.attention.outcome == 'success' &&
+            (
+              steps.sync.outcome == 'failure' ||
+              steps.guard.outcome == 'failure' ||
+              steps.tests.outcome == 'failure' ||
+              steps.publish.outcome == 'failure'
+            )
+          }}
+        shell: bash
+        run: exit 1
