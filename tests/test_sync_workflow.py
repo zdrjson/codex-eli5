@@ -14,7 +14,7 @@ class SyncWorkflowTests(unittest.TestCase):
 
     def test_schedule_and_manual_dispatch_are_configured(self):
         self.assertRegex(self.workflow, r'(?m)^\s+schedule:\s*$')
-        self.assertRegex(self.workflow, r'(?m)^\s+- cron: "23 3 \* \* \*"\s*$')
+        self.assertRegex(self.workflow, r'(?m)^\s+- cron: "23 \*/6 \* \* \*"\s*$')
         self.assertRegex(self.workflow, r'(?m)^\s+workflow_dispatch:\s*$')
 
     def test_concurrency_prevents_overlapping_sync_runs(self):
