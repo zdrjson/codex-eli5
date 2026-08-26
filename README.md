@@ -67,7 +67,7 @@ Then start a new task and invoke the skill as `$codex-eli5:eli5 <topic>`.
 
 ## Public listing information
 
-- Publisher: 德荣 张 ([GitHub @zdrjson](https://github.com/zdrjson))
+- Publisher: [GitHub @zdrjson](https://github.com/zdrjson)
 - Website: [github.com/zdrjson/codex-eli5](https://github.com/zdrjson/codex-eli5)
 - Support: [GitHub Issues](https://github.com/zdrjson/codex-eli5/issues)
 - Privacy: [PRIVACY.md](PRIVACY.md)
