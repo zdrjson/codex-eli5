@@ -2,7 +2,8 @@ name: Sync Claude ELI5 upstream
 
 on:
   schedule:
-    - cron: "23 */6 * * *"
+    # Every Wednesday at 15:23 Asia/Shanghai (07:23 UTC).
+    - cron: "23 7 * * 3"
   workflow_dispatch:
 
 permissions:
