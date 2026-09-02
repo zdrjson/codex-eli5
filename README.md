@@ -111,7 +111,7 @@ The test suite has no third-party packages. CI spans Python 3.9–3.14 and runs 
 
 ### GitHub-hosted Claude compatibility monitor
 
-[`sync-claude-eli5.yml`](.github/workflows/sync-claude-eli5.yml) runs on GitHub Actions every six hours at minute 23 and can also be started manually. The monitor pins one Anthropic repository commit, verifies every Git blob, and compares only the official `eli5/` subtree plus the single `eli5` marketplace entry. Unrelated changes elsewhere in Anthropic's large community repository do not trigger an update.
+[`sync-claude-eli5.yml`](.github/workflows/sync-claude-eli5.yml) runs on GitHub Actions weekly (Wednesday at 15:23 Asia/Shanghai) and can also be started manually. The monitor pins one Anthropic repository commit, verifies every Git blob, and compares only the official `eli5/` subtree plus the single `eli5` marketplace entry. Unrelated changes elsewhere in Anthropic's large community repository do not trigger an update.
 
 For the known three-file text layout, the workflow refreshes the [verified snapshot](upstream/claude-eli5.snapshot.json) and the [generated compatibility reference](plugins/codex-eli5/skills/eli5/references/claude-eli5.md), runs the complete regression suite, then opens a SHA-pinned **draft** pull request. It never pushes to `main` or auto-merges. A network failure, duplicate/missing marketplace entry, unsafe path, binary file, unexpected layout, failed test, or unavailable PR permission leaves the stored baseline untouched and creates or updates one auditable GitHub Issue instead.
 
